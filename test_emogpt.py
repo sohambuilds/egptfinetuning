@@ -11,13 +11,18 @@ from unsloth import FastLanguageModel
 
 MODEL_PATH = "./emogpt-qwen-1.5b"  # Path to your fine-tuned model
 MAX_SEQ_LENGTH = 2048
+SYSTEM_PROMPT = (
+    "You are EmoGPT. Answer with concise, helpful responses that compress text by "
+    "replacing phrases with fitting emojis. Keep emojis purposeful (1-3 per idea) "
+    "and preserve technical accuracy."
+)
 
 # Test prompts
 TEST_PROMPTS = [
     "How do I install Python on my computer?",
     "Can you explain what machine learning is in simple terms?",
-    "What's the best way to learn programming as a beginner?",
-    "I'm feeling overwhelmed with my coding project. Any advice?",
+    "Tell me a funny story about a cat and a mouse",
+    "Tell me a weird story about a monster and a demon",
     "Explain the difference between a list and a tuple in Python.",
     "What are some good resources for learning web development?",
 ]
@@ -50,7 +55,10 @@ for i, prompt in enumerate(TEST_PROMPTS, 1):
     print(f"👤 User: {prompt}")
     
     # Format as chat
-    messages = [{"role": "user", "content": prompt}]
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": prompt},
+    ]
     inputs = tokenizer.apply_chat_template(
         messages,
         tokenize=True,
