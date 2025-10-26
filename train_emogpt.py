@@ -32,7 +32,7 @@ WEIGHT_DECAY = 0.01
 # LoRA configuration - slightly aggressive
 LORA_R = 16  # Higher rank = more capacity
 LORA_ALPHA = 32  # Typically 2*r
-LORA_DROPOUT = 0.05  # Lower dropout for more learning
+LORA_DROPOUT = 0 # Lower dropout for more learning
 
 # ============================================================================
 # LOAD MODEL & TOKENIZER
