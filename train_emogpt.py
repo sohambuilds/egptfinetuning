@@ -6,7 +6,7 @@ Optimized for A6000 48GB VRAM with slightly aggressive hyperparameters.
 import torch
 from unsloth import FastLanguageModel
 from trl import SFTTrainer
-from transformers import TrainingArguments
+from transformers import TrainingArguments, DataCollatorForSeq2Seq
 from datasets import load_dataset
 
 # ============================================================================
@@ -178,12 +178,20 @@ print(f"   - Warmup ratio: {WARMUP_RATIO}")
 
 print("\n🏋️  Initializing trainer...")
 
+# Create data collator
+data_collator = DataCollatorForSeq2Seq(
+    tokenizer=tokenizer,
+    model=model,
+    padding=True,
+)
+
 trainer = SFTTrainer(
     model=model,
     tokenizer=tokenizer,
     train_dataset=train_dataset,
     eval_dataset=val_dataset,
     max_seq_length=MAX_SEQ_LENGTH,
+    data_collator=data_collator,
     formatting_func=formatting_prompts_func,
     args=training_args,
     packing=False,  # Don't pack sequences for chat format
