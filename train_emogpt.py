@@ -88,35 +88,29 @@ val_dataset = load_dataset('json', data_files=VAL_DATA, split='train')
 print(f"✅ Training samples: {len(train_dataset)}")
 print(f"✅ Validation samples: {len(val_dataset)}")
 
+
 # ============================================================================
-# FORMATTING FUNCTION
+# PREPARE CHAT TEXT FIELD
 # ============================================================================
 
-def formatting_prompts_func(examples):
-    """Format conversations using Qwen2.5 chat template"""
-    texts = []
-    
-    # Handle both single example and batched examples
-    if isinstance(examples["messages"][0], dict):
-        # Single example: examples["messages"] is a list of message dicts
-        messages = examples["messages"]
-        text = tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=False
-        )
-        texts.append(text)
-    else:
-        # Batched examples: examples["messages"] is a list of conversations
-        for messages in examples["messages"]:
-            text = tokenizer.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=False
-            )
-            texts.append(text)
-    
-    return texts
+def add_chat_text(example):
+    """Add chat-formatted text field expected by SFTTrainer."""
+    example["text"] = tokenizer.apply_chat_template(
+        example["messages"],
+        tokenize=False,
+        add_generation_prompt=False,
+    )
+    return example
+
+
+print("\n🛠️  Formatting conversations with chat template...")
+
+train_dataset = train_dataset.map(add_chat_text, desc="Formatting train set")
+val_dataset = val_dataset.map(add_chat_text, desc="Formatting val set")
+
+# Optional: remove original messages to reduce memory
+# train_dataset = train_dataset.remove_columns(["messages"])
+# val_dataset = val_dataset.remove_columns(["messages"])
 
 # ============================================================================
 # TRAINING ARGUMENTS
@@ -191,8 +185,8 @@ trainer = SFTTrainer(
     train_dataset=train_dataset,
     eval_dataset=val_dataset,
     max_seq_length=MAX_SEQ_LENGTH,
+    dataset_text_field="text",
     data_collator=data_collator,
-    formatting_func=formatting_prompts_func,
     args=training_args,
     packing=False,  # Don't pack sequences for chat format
 )
