@@ -94,6 +94,8 @@ print(f"✅ Validation samples: {len(val_dataset)}")
 
 def formatting_prompts_func(examples):
     """Format conversations using Qwen2.5 chat template"""
+    texts = []
+    
     # Handle both single example and batched examples
     if isinstance(examples["messages"][0], dict):
         # Single example: examples["messages"] is a list of message dicts
@@ -103,10 +105,9 @@ def formatting_prompts_func(examples):
             tokenize=False,
             add_generation_prompt=False
         )
-        return text
+        texts.append(text)
     else:
         # Batched examples: examples["messages"] is a list of conversations
-        texts = []
         for messages in examples["messages"]:
             text = tokenizer.apply_chat_template(
                 messages,
@@ -114,7 +115,8 @@ def formatting_prompts_func(examples):
                 add_generation_prompt=False
             )
             texts.append(text)
-        return texts
+    
+    return texts
 
 # ============================================================================
 # TRAINING ARGUMENTS
