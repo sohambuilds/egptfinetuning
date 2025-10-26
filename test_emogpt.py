@@ -64,11 +64,20 @@ for i, prompt in enumerate(TEST_PROMPTS, 1):
         tokenize=True,
         add_generation_prompt=True,
         return_tensors="pt"
-    ).to("cuda")
+    )
+
+    # Ensure attention mask is provided (pad_token == eos_token triggers warning otherwise)
+    if isinstance(inputs, torch.Tensor):
+        inputs = {
+            "input_ids": inputs,
+            "attention_mask": torch.ones_like(inputs),
+        }
+
+    inputs = {k: v.to(model.device) for k, v in inputs.items()}
     
     # Generate
     outputs = model.generate(
-        input_ids=inputs,
+        **inputs,
         max_new_tokens=512,
         temperature=0.7,
         top_p=0.9,
@@ -77,7 +86,8 @@ for i, prompt in enumerate(TEST_PROMPTS, 1):
     )
     
     # Decode
-    response = tokenizer.decode(outputs[0][inputs.shape[1]:], skip_special_tokens=True)
+    prompt_length = inputs["input_ids"].shape[1]
+    response = tokenizer.decode(outputs[0][prompt_length:], skip_special_tokens=True)
     
     print(f"🤖 EmoGPT: {response}")
     print("-"*60)
