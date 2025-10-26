@@ -94,16 +94,27 @@ print(f"✅ Validation samples: {len(val_dataset)}")
 
 def formatting_prompts_func(examples):
     """Format conversations using Qwen2.5 chat template"""
-    texts = []
-    for messages in examples["messages"]:
-        # Apply Qwen2.5 chat template
+    # Handle both single example and batched examples
+    if isinstance(examples["messages"][0], dict):
+        # Single example: examples["messages"] is a list of message dicts
+        messages = examples["messages"]
         text = tokenizer.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=False
         )
-        texts.append(text)
-    return {"text": texts}
+        return text
+    else:
+        # Batched examples: examples["messages"] is a list of conversations
+        texts = []
+        for messages in examples["messages"]:
+            text = tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=False
+            )
+            texts.append(text)
+        return texts
 
 # ============================================================================
 # TRAINING ARGUMENTS
@@ -170,7 +181,6 @@ trainer = SFTTrainer(
     tokenizer=tokenizer,
     train_dataset=train_dataset,
     eval_dataset=val_dataset,
-    dataset_text_field="text",
     max_seq_length=MAX_SEQ_LENGTH,
     formatting_func=formatting_prompts_func,
     args=training_args,
